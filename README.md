@@ -1,9 +1,9 @@
 # Oyster Challenge
-=================
+
 
 User Stories
 -----
-
+```
 In order to use public transport
 As a customer
 I want money on my card
@@ -51,3 +51,4 @@ I need a penalty charge deducted if I fail to touch in or out
 In order to be charged the correct amount
 As a customer
 I need to have the correct fare calculated
+```
