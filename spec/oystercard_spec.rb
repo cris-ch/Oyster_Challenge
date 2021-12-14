@@ -3,26 +3,30 @@
 require 'oystercard.rb'
 
 describe Oystercard do
+  
+  def topup_touchin
+    oystercard.top_up(10)
+    oystercard.touch_in(station)
+  end
+
+  def topup_touchin_touchout
+    oystercard.top_up(10)
+    oystercard.touch_in(station)
+    oystercard.touch_out(station2)
+  end
+  
+  let(:station) { double("station") }
+  let(:station2) { double("station") }
+
   subject(:oystercard) { described_class.new }
 
   describe "#balance" do
-
-    it { is_expected.to respond_to(:balance) }
     
     it 'has a default balance of 0' do
       expect(oystercard.balance).to eq(Oystercard::DEFAULT_CAPACITY)
     end
-  
   end  
     
-  describe "#top_up" do
-
-    it 'can add money' do
-      expect(oystercard.top_up(10)).to eq 10
-    end
-
-  end
-
   context 'top up limit is reached' do
 
     it 'raises an error if the maximum balance is exceeded' do
@@ -34,43 +38,50 @@ describe Oystercard do
   end
 
   describe "#in_journey?" do
-    it { is_expected.to respond_to(:in_journey?) }
 
     it "returns if card is in journey" do
-      oystercard.top_up(10)
-      oystercard.touch_in
+      topup_touchin
       expect(oystercard).to be_in_journey
     end
   end
 
   describe "#touch_in" do
-    it { is_expected.to respond_to(:touch_in) }
-
-    it "returns if card touched in" do
-      oystercard.top_up(10)
-      expect(oystercard.touch_in).to eq true
-    end
 
     it "returns 'Not enough money'" do
-      expect { oystercard.touch_in }.to raise_error "Not enough money"
+      expect { oystercard.touch_in(station) }.to raise_error "Not enough money"
+    end
+
+    it 'records the entry station' do
+      oystercard.top_up(10)
+      expect(oystercard.touch_in(station)).to eq station
+    end
+
+    it 'saves station to journeys' do 
+      topup_touchin
+      expect(oystercard.journeys).to eq [{in: station, out: nil}]
     end
   end
 
   describe "#touch_out" do
-    it { is_expected.to respond_to(:touch_out) }
 
     it "returns if card touched in" do
-      oystercard.top_up(10)
-      oystercard.touch_out
+      topup_touchin_touchout
       expect(oystercard.in_journey?).to eq false
     end
 
     it "deducts the minimum fare" do 
-      oystercard.top_up(10)
-      expect { oystercard.touch_out }.to change{ oystercard.balance }.by(-Oystercard::DEFAULT_MINIMUM)
+      topup_touchin
+      expect { oystercard.touch_out(station) }.to change{ oystercard.balance }.by(-Oystercard::DEFAULT_MINIMUM)
+    end
+
+    it 'sets entry_station to nil' do
+      topup_touchin_touchout
+      expect(oystercard.entry_station).to eq nil
+    end
+
+    it 'saves station to journeys' do 
+      topup_touchin_touchout
+      expect(oystercard.journeys).to eq [{in: station, out: station2}]
     end
   end
-
-  
-
 end
