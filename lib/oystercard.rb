@@ -1,3 +1,5 @@
+require 'journey'
+
 class Oystercard 
   MAXIMUM_BALANCE = 90
   DEFAULT_CAPACITY = 0
@@ -16,25 +18,36 @@ class Oystercard
   end
 
   def in_journey?
-    @entry_station != nil
+    @journey != nil
+
   end
 
   def touch_in(station)
     fail "Not enough money" if balance < DEFAULT_MINIMUM
-    @journeys << {in: station, out: nil}
-    @entry_station = station
+    if in_journey? 
+      deduct
+    else
+      @journey = Journey.new
+      @journey.entry_station(station)
+    end
+    
   end
 
   def touch_out(station)
-    deduct(DEFAULT_MINIMUM)
-    @journeys[-1][:out] = station 
-    @entry_station = nil
+    if in_journey?
+      @journey.exit_station(station) 
+    else
+      @journey = Journey.new
+      @journey.exit_station(station)
+    end
+    deduct
+    @journey = nil
   end
 
   private
 
-  def deduct(amount)
-    fail "Insufficient funds" if balance - amount < 0
-    @balance -= amount
+  def deduct
+    # fail "Insufficient funds" if balance - amount < 0
+    @balance -= @journey.fare
   end
 end
