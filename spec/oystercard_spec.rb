@@ -23,7 +23,6 @@ describe Oystercard do
 
   end
 
-
   context 'top up limit is reached' do
 
     it 'raises an error if the maximum balance is exceeded' do
@@ -34,20 +33,11 @@ describe Oystercard do
   
   end
 
-  describe "#deduct" do
-    it { is_expected.to respond_to(:deduct).with(1).argument }
-
-    it 'raises an error if not enough balance' do
-      oystercard.top_up 10
-      expect{ subject.deduct 11 }.to raise_error "Insufficient funds"
-    end
-
-  end
-
   describe "#in_journey?" do
     it { is_expected.to respond_to(:in_journey?) }
 
     it "returns if card is in journey" do
+      oystercard.top_up(10)
       oystercard.touch_in
       expect(oystercard).to be_in_journey
     end
@@ -57,8 +47,12 @@ describe Oystercard do
     it { is_expected.to respond_to(:touch_in) }
 
     it "returns if card touched in" do
-      oystercard.touch_in
-      expect(oystercard.in_journey?).to eq true
+      oystercard.top_up(10)
+      expect(oystercard.touch_in).to eq true
+    end
+
+    it "returns 'Not enough money'" do
+      expect { oystercard.touch_in }.to raise_error "Not enough money"
     end
   end
 
@@ -66,8 +60,17 @@ describe Oystercard do
     it { is_expected.to respond_to(:touch_out) }
 
     it "returns if card touched in" do
+      oystercard.top_up(10)
       oystercard.touch_out
       expect(oystercard.in_journey?).to eq false
     end
+
+    it "deducts the minimum fare" do 
+      oystercard.top_up(10)
+      expect { oystercard.touch_out }.to change{ oystercard.balance }.by(-Oystercard::DEFAULT_MINIMUM)
+    end
   end
+
+  
+
 end
